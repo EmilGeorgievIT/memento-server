@@ -1,8 +1,8 @@
 package com.memento.service;
 
 import com.memento.model.Role;
+import com.memento.model.RoleName;
 
-import java.util.List;
 import java.util.Set;
 
 public interface RoleService {
@@ -11,4 +11,7 @@ public interface RoleService {
 
     Role save(Role role);
 
+    void saveRoles(Set<Role> roles);
+
+    Role findRoleByRoleName(RoleName roleName);
 }

@@ -1,55 +1,75 @@
 package com.memento.service.impl;
 
-import com.memento.model.RoleName;
+import com.memento.model.EmailVerificationToken;
 import com.memento.model.User;
-import com.memento.repository.RoleRepository;
 import com.memento.repository.UserRepository;
+import com.memento.service.EmailService;
+import com.memento.service.EmailVerificationService;
+import com.memento.service.RoleService;
 import com.memento.service.UserService;
 import com.memento.shared.exception.ResourceNotFoundException;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 @Primary
-@Log4j2
-@Transactional
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
+    private final EmailService emailService;
+    private final EmailVerificationService verificationService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
     public UserServiceImpl(final UserRepository userRepository,
-                           final RoleRepository roleRepository,
+                           final RoleService roleService,
+                           final EmailService emailService,
+                           final EmailVerificationService verificationService,
                            final BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
+        this.roleService = roleService;
+        this.emailService = emailService;
+        this.verificationService = verificationService;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     @Override
-    public List<User> getAll() {
-        return userRepository.findAll();
+    public Set<User> getAll() {
+        return Set.copyOf(userRepository.findAll());
     }
 
     @Override
-    public User save(final User user) {
+    @Transactional
+    public void register(final User user) {
         Objects.requireNonNull(user, "User cannot be null.");
+
+        if (!userRepository.findByEmail(user.getEmail()).isEmpty()) {
+            throw new DuplicateKeyException("email exists.");
+        }
+
         final User newUser = User.builder()
-                .username(user.getUsername())
-                .role(roleRepository.findRoleByRoleName(RoleName.CLIENT))
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .role(roleService.findRoleByRoleName(user.getRole().getRoleName()))
                 .password(bCryptPasswordEncoder.encode(user.getPassword()))
                 .build();
-        return userRepository.save(newUser);
+
+        final User savedUser = userRepository.save(newUser);
+        final EmailVerificationToken emailVerificationToken = EmailVerificationToken.from(savedUser);
+        emailService.sendMail(newUser.getEmail(), emailVerificationToken.getToken());
+        verificationService.save(emailVerificationToken);
     }
 
     @Override
@@ -58,11 +78,17 @@ public class UserServiceImpl implements UserService {
         final User oldUser = userRepository.findById(user.getId()).orElseThrow(() -> new ResourceNotFoundException("Cannot find user with id: " + user.getId()));
         final User newUser = User.builder()
                 .id(oldUser.getId())
-                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .password(bCryptPasswordEncoder.encode(user.getPassword()))
                 .role(user.getRole())
                 .build();
         return userRepository.save(newUser);
+    }
+
+    @Override
+    public User findByEmail(final String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Cannot find user with email: " + email));
     }
 
     @Override
@@ -73,9 +99,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(final String username) {
-        Objects.requireNonNull(username, "Username cannot be null.");
-        log.info("Loading user with username: " + username);
-        return userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find User with username: " + username));
+    public UserDetails loadUserByUsername(final String email) {
+        Objects.requireNonNull(email, "Email cannot be null.");
+        final User user =  userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Cannot find Email with email: " + email));
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(user.getEmail())
+                .password(user.getPassword())
+                .authorities(Set.of(user.getRole()))
+                .build();
     }
 }

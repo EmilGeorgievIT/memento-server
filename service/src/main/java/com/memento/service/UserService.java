@@ -4,14 +4,17 @@ import com.memento.model.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
+import java.util.Set;
 
 public interface UserService extends UserDetailsService {
 
-    List<User> getAll();
+    Set<User> getAll();
 
     User findById(Long id);
 
-    User save(User user);
+    void register(User user);
 
     User update(User user);
+
+    User findByEmail(String email);
 }

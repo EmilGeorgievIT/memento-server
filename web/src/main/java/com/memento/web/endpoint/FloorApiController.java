@@ -1,4 +1,4 @@
-package com.memento.web;
+package com.memento.web.endpoint;
 
 import com.memento.model.Floor;
 import com.memento.service.FloorService;

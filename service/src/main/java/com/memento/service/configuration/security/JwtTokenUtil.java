@@ -1,15 +1,16 @@
-package com.memento.configuration.security;
+package com.memento.service.configuration.security;
 
+import com.memento.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -25,7 +26,7 @@ public class JwtTokenUtil implements Serializable {
     @Value("${jwt.expires_in:10000}")
     private int JWT_TOKEN_VALIDITY;
 
-    public String getUsernameFromToken(String token) {
+    public String getEmailFromToken(String token) {
         return getClaimFromToken(token, Claims::getSubject);
     }
 
@@ -48,19 +49,25 @@ public class JwtTokenUtil implements Serializable {
         return "";
     }
 
-    public String generateToken(String subject, String authority) {
+    public String generateToken(User user, String authority) {
+        final Map<String, Object> claims = new HashMap<>();
+        claims.put("id", user.getId());
+        claims.put("scopes", authority);
+        claims.put("firstName", user.getFirstName());
+        claims.put("lastName", user.getLastName());
+
         return Jwts.builder()
-                .setClaims(Jwts.claims(Map.of("scopes", authority)))
-                .setSubject(subject)
+                .setClaims(Jwts.claims(claims))
+                .setSubject(user.getEmail())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
                 .signWith(SignatureAlgorithm.HS512, SECRET)
                 .compact();
     }
 
-    public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = getUsernameFromToken(token);
-        return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+    public Boolean validateToken(String token, User user) {
+        final String email = getEmailFromToken(token);
+        return email.equals(user.getEmail()) && !isTokenExpired(token);
     }
 
     private Claims getAllClaimsFromToken(String token) {

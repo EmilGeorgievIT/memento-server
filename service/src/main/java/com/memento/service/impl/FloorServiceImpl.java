@@ -4,7 +4,7 @@ import com.memento.model.Floor;
 import com.memento.repository.FloorRepository;
 import com.memento.service.FloorService;
 import com.memento.shared.exception.ResourceNotFoundException;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import java.util.Set;
 
 @Service
 @Primary
-@Log4j2
+@Slf4j
 @Transactional
 public class FloorServiceImpl implements FloorService {
 

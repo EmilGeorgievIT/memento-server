@@ -1,8 +1,8 @@
-package com.memento.web;
+package com.memento.web.endpoint;
 
 import com.memento.model.Neighborhood;
 import com.memento.service.NeighborhoodService;
-import com.memento.web.api.NeighborhoodApi;
+import com.memento.web.endpoint.api.NeighborhoodApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

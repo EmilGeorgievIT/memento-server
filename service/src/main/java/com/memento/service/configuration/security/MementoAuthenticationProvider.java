@@ -1,4 +1,4 @@
-package com.memento.configuration.security;
+package com.memento.service.configuration.security;
 
 import com.google.common.base.Strings;
 import com.memento.model.User;
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Objects;
+import java.util.Set;
 
 @Component
 public class MementoAuthenticationProvider implements AuthenticationProvider {
@@ -35,17 +36,16 @@ public class MementoAuthenticationProvider implements AuthenticationProvider {
             return new UsernamePasswordAuthenticationToken(null, null, null);
         }
 
-        final String username = authentication.getName();
+        final String email = authentication.getName();
         final String password = authentication.getCredentials().toString();
 
-        final User foundUser = (User) userService.loadUserByUsername(username);
+        final User user = userService.findByEmail(email);
 
-        if (!bCryptPasswordEncoder.matches(password, foundUser.getPassword())) {
+        if (!bCryptPasswordEncoder.matches(password, user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username or password doesn't match");
         }
 
-        return new UsernamePasswordAuthenticationToken(
-                foundUser, foundUser.getPassword(), foundUser.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(user, user.getPassword(), Set.of(user.getRole()));
     }
 
     @Override

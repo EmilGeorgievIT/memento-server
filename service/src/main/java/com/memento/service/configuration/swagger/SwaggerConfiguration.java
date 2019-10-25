@@ -1,4 +1,4 @@
-package com.memento.configuration.swagger;
+package com.memento.service.configuration.swagger;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

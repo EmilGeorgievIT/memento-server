@@ -3,7 +3,7 @@ package com.memento.service.impl;
 import com.memento.model.AdType;
 import com.memento.repository.AdTypeRepository;
 import com.memento.service.AdTypeService;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -13,7 +13,7 @@ import java.util.Set;
 
 @Service
 @Primary
-@Log4j2
+@Slf4j
 @Transactional
 public class AdTypeServiceImpl implements AdTypeService {
 

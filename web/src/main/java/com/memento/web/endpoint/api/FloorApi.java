@@ -1,4 +1,4 @@
-package com.memento.web.api;
+package com.memento.web.endpoint.api;
 
 import com.memento.model.Floor;
 import io.swagger.annotations.Api;

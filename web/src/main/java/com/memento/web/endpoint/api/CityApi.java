@@ -1,4 +1,4 @@
-package com.memento.web.api;
+package com.memento.web.endpoint.api;
 
 import com.memento.model.City;
 import io.swagger.annotations.Api;
